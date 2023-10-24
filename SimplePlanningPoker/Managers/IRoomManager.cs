@@ -4,9 +4,9 @@ namespace SimplePlanningPoker.Managers
 {
     public interface IRoomManager
     {
-        Task<Room?> CreateRoomAsync(string roomId);
+        Task<Room?> CreateRoomAsync();
         Task<Room?> GetRoomAsync(string roomId);
-        Task<bool> JoinRoomAsync(string roomId, string participantId);
-        Task<bool> LeaveRoomAsync(string roomId, string participantId);
+        Task<bool> JoinRoomAsync(string roomId, User participant);
+        Task<bool> LeaveRoomAsync(string roomId, User participant);
     }
 }

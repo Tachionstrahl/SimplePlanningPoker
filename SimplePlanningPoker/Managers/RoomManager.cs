@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using SimplePlanningPoker.Models;
-
+using SimplePlanningPoker.Utils;
 
 namespace SimplePlanningPoker.Managers
 {
@@ -16,13 +16,9 @@ namespace SimplePlanningPoker.Managers
             rooms = new ConcurrentDictionary<string, Room>();
         }
 
-        public async Task<Room?> CreateRoomAsync(string roomId)
-        {
-            if (rooms.ContainsKey(roomId))
-            {
-                throw new ArgumentException("Room ID already exists.");
-            }
-
+        public async Task<Room?> CreateRoomAsync()
+        {            
+            var roomId = RandomIDGenerator.GenerateRandomID(6);
             Room room = new(roomId);
             return await Task.Run(() => rooms.TryAdd(roomId, room) ? room : null);
         }

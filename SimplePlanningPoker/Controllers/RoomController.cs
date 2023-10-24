@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SimplePlanningPoker.Managers;
 using SimplePlanningPoker.Models;
-using SimplePlanningPoker.Utils;
-
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace SimplePlanningPoker.Controllers
@@ -28,10 +26,9 @@ namespace SimplePlanningPoker.Controllers
         [HttpPost("create")]
         public async Task<ActionResult<string>> Create()
         {
-            logger.LogInformation("Creating a room.");
-            var roomId = RandomIDGenerator.GenerateRandomID(6);            
-            var room = await this.roomManager.CreateRoomAsync(roomId);
-            return room == null ? BadRequest("Creating a room failed.") : room.RoomId;
+            logger.LogInformation("Creating a room.");           
+            var room = await roomManager.CreateRoomAsync();
+            return room == null ? BadRequest("Creating a room failed.") : Ok(room.RoomId);
         }
 
         // POST api/room/{roomId}/join
@@ -68,6 +65,19 @@ namespace SimplePlanningPoker.Controllers
         public async Task<IActionResult> Reset(string roomId)
         {
             throw new NotImplementedException();
+        }
+
+
+        private User GetUserFromHttpContext()
+        {
+            var user = new User()
+            {
+                Name = User.Identity?.Name ?? throw new ArgumentNullException("User has no name"),
+                Token = User.Claims.First(c => c.Type == "Token").Value
+            };
+
+            return user;
+            
         }
 
     }
