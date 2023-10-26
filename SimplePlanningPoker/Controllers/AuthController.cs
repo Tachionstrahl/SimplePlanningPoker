@@ -1,46 +1,70 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace SimplePlanningPoker.Controllers
 {
     [Route("api/[controller]")]
+    [AllowAnonymous]
     public class AuthController : Controller
     {
-        // GET: api/values
-        [HttpGet]
-        public IEnumerable<string> Get()
+        private readonly IConfiguration _config;
+        public AuthController(IConfiguration config)
         {
-            return new string[] { "value1", "value2" };
+            _config = config;
+
         }
 
-        // GET api/values/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
-
-        // POST api/values
+        /// <summary>
+        /// Creates a new token for the given username.
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns></returns>
         [HttpPost]
-        public void Post([FromBody]string value)
+        public IActionResult CreateToken([FromBody] string username)
         {
+            try
+            {
+                var token = GenerateJSONWebToken(username);
+                return Ok(new { Token = token, Message = "Success" });
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+                return BadRequest("Failed to create token");
+                throw;
+            }
         }
 
-        // PUT api/values/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        /// <summary>
+        /// Generates a new JSON Web Token.
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        private string GenerateJSONWebToken(string username)
         {
-        }
+            var key = _config["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key is not configured");
+            var issuer = _config["Jwt:Issuer"] ?? throw new InvalidOperationException("Jwt:Issuer is not configured");
+            var audience = _config["Jwt:Audience"] ?? throw new InvalidOperationException("Jwt:Audience is not configured");
 
-        // DELETE api/values/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = new JwtSecurityToken(issuer,
+                audience,
+                claims: new[] { new Claim(JwtRegisteredClaimNames.Name, username) },
+                expires: DateTime.Now.AddMinutes(120),
+                signingCredentials: credentials);
+
+            return tokenHandler.WriteToken(token);
         }
     }
 }

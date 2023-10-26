@@ -1,4 +1,9 @@
-﻿using SimplePlanningPoker.Hubs;
+﻿using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using NSwag;
+using NSwag.Generation.Processors.Security;
+using SimplePlanningPoker.Hubs;
 using SimplePlanningPoker.Managers;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,10 +12,40 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddControllers();
-builder.Services.AddOpenApiDocument();
+builder.Services.AddOpenApiDocument(c => {
+    c.AddSecurity("apikey", Enumerable.Empty<string>(), new() {
+        Type = OpenApiSecuritySchemeType.Http,
+        Scheme = JwtBearerDefaults.AuthenticationScheme,
+        BearerFormat = "JWT", 
+        Description = "Type into the textbox: {your JWT token}."
+        
+    });
+    c.OperationProcessors.Add(
+        new AspNetCoreOperationSecurityScopeProcessor("apikey"));
+});
+
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<IRoomManager, RoomManager>();
 
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(o =>
+{
+    o.TokenValidationParameters = new TokenValidationParameters  
+                {  
+                    ValidateIssuer = true,  
+                    ValidateAudience = true,  
+                    ValidateLifetime = false,  
+                    ValidateIssuerSigningKey = true,  
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],  
+                    ValidAudience = builder.Configuration["Jwt:Issuer"],  
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])) //Configuration["JwtToken:SecretKey"]  
+                }; 
+});
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -23,7 +58,7 @@ if (!app.Environment.IsDevelopment())
 else
 {
     // Development Environment
-    app.UseSwaggerUi3(c => c.DocumentTitle = "Simple Planning Poker API");
+    app.UseSwaggerUi3();
     app.UseOpenApi();
 }
 
@@ -36,6 +71,9 @@ app.MapControllerRoute(
     pattern: "{controller}/{action=Index}/{id?}");
 
 app.MapHub<RoomHub>("/Room").AllowAnonymous();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapFallbackToFile("index.html");
 

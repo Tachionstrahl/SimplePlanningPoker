@@ -3,8 +3,8 @@ namespace SimplePlanningPoker.Models
 {
 	public class User
 	{
-		public string Token { get; set; }
-		public string Name { get; set; }
+		public required string Id { get; set; }
+		public required string Name { get; set; }
 	}
 }
 

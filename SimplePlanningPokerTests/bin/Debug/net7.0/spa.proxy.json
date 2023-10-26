@@ -1,8 +1,0 @@
-{
-"SpaProxyServer": {
-"ServerUrl": "https://localhost:44476",
-"LaunchCommand": "npm start",
-"WorkingDirectory": "/Users/marius/Developer/SimplePlanningPoker/SimplePlanningPoker/ClientApp/",
-"MaxTimeoutInSeconds": "120"
-}
-}

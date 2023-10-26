@@ -7,7 +7,7 @@ const PROXY_CONFIG = [
   {
     context: [
       "/weatherforecast",
-      "/api/room/createroom"
+      "/api/room/createroom",
       "/swagger"
    ],
     proxyTimeout: 10000,
