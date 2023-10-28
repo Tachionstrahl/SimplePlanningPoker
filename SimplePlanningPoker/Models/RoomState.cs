@@ -5,40 +5,68 @@ namespace SimplePlanningPoker.Models
     /// Represents the state of a planning poker room.
     /// To be used in the hub and the client.
     /// </summary>
-	public interface IRoomState
+	public abstract class RoomState
     {
+        protected readonly Room room;
+        public RoomState(Room room)
+        {
+            this.room = room;
+
+        }
+        public abstract RoomStateName RoomStateName { get; }
         /// <summary>
-        /// Gets or sets the ID of the room.
+        /// Gets the ID of the room.
         /// </summary>
-		public string RoomId { get; }
+		public string RoomId => room.RoomId;
 
         /// <summary>
-        /// Gets or sets the card set used in the room.
+        /// Gets the card set used in the room.
         /// </summary>
-        public CardSet CardSet { get; }
+        public CardSet CardSet => room.CardSet;
 
         /// <summary>
-        /// Gets or sets the list of participants in the room.
+        /// Gets the list of participants in the room.
         /// </summary>
-        public IEnumerable<string> Participants { get; }
+        public IEnumerable<string> Participants => room.GetAllParticipants().Select(p => p.User.Name);
+    }
+
+    public enum RoomStateName
+    {
+        Choose,
+        Show
     }
 
     /// <summary>
     /// Represents the state of a planning poker room during the "choose" phase.
     /// </summary>
-    public interface IChooseState : IRoomState
+    public class ChooseState : RoomState
     {
+        public ChooseState(Room room) : base(room)
+        {
+        }
+
+        public override RoomStateName RoomStateName => RoomStateName.Choose;
     }
 
     /// <summary>
     /// Represents the state of a planning poker room during the "show" phase.
     /// </summary>
-    public interface IShowState : IRoomState
+    public class ShowState : RoomState
     {
+        public ShowState(Room room) : base(room)
+        {
+        }
+
         /// <summary>
-        /// Gets or sets the estimates made by the participants in the room.
+        /// Gets the estimates made by the participants in the room.
         /// </summary>
-        public IDictionary<string, string> Estimates { get; }
+        public IDictionary<string, string?> Estimates =>
+        room.GetAllParticipants()
+            .Select(p => new { p.User.Name, p.Estimate })
+            .ToDictionary(e => e.Name, e => e.Estimate);
+
+        public override RoomStateName RoomStateName => RoomStateName.Show;
     }
+
 }
 

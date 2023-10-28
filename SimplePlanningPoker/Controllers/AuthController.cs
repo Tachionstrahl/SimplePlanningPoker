@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using SimplePlanningPoker.Utils;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -29,6 +30,8 @@ namespace SimplePlanningPoker.Controllers
         [HttpPost]
         public IActionResult CreateToken([FromBody] string username)
         {
+            if (string.IsNullOrWhiteSpace(username))
+                return BadRequest("Username is required");
             try
             {
                 var token = GenerateJSONWebToken(username);
@@ -60,7 +63,9 @@ namespace SimplePlanningPoker.Controllers
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = new JwtSecurityToken(issuer,
                 audience,
-                claims: new[] { new Claim(JwtRegisteredClaimNames.Name, username) },
+                claims: new[] { 
+                    new Claim(JwtRegisteredClaimNames.Name, username), 
+                    new Claim("user_id", RandomIDGenerator.GenerateRandomID(6))},
                 expires: DateTime.Now.AddMinutes(120),
                 signingCredentials: credentials);
 

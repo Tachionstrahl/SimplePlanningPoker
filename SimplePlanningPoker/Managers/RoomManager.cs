@@ -28,6 +28,12 @@ namespace SimplePlanningPoker.Managers
             var success = rooms.TryAdd(roomId, room);
             return success ? (AddRoomResult.Success, room.RoomId) : (AddRoomResult.Failed, null);
         }
+
+        public bool DoesRoomExist(string roomId)
+        {
+            return rooms.ContainsKey(roomId);
+        }
+
         /// <summary>
         /// Retrieves a room by its ID.
         /// Returns <see cref="null"/>, if the room does not exist.

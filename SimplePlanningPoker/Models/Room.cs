@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Collections.Immutable;
 
 namespace SimplePlanningPoker.Models
 {
@@ -7,11 +6,9 @@ namespace SimplePlanningPoker.Models
     /// Represents a room instance, which is associated with participants and their current estimates.
     /// This class is defined as thread-safe.
     /// </summary>
-    public class Room : IRoomState, IShowState, IChooseState
+    public class Room
     {
-
-        private readonly ConcurrentDictionary<string, User> participants;
-        private ConcurrentDictionary<string, string> estimates;
+        private readonly ConcurrentDictionary<string, Participant> participants;
 
         /// <summary>
         /// Creates a new room instance.
@@ -20,27 +17,26 @@ namespace SimplePlanningPoker.Models
         public Room(string roomId)
         {
             RoomId = roomId;
-            participants = new ConcurrentDictionary<string, User>();
-            estimates = new ConcurrentDictionary<string, string>();
+            participants = new ConcurrentDictionary<string, Participant>();
+            State = new ChooseState(this);
         }
 
         /// <summary>
         /// The unique identifier of the room.
         /// </summary>
         public string RoomId { get; }
+        public CardSet CardSet { get; set; } = CardSets.Default;
 
-        public CardSet CardSet { get; set; }
+        public RoomState State { get; private set; }
 
-        public IEnumerable<string> Participants => participants.Select(x => x.Value.Name);
-
-        public IDictionary<string, string> Estimates => throw new NotImplementedException();
-
-        public bool AddParticipant(User participant)
+        #region Public Methods
+        public bool AddParticipant(User user)
         {
-            if (participant == null)
-                throw new ArgumentNullException(nameof(participant));
-                
-            return participants.TryAdd(participant.Id, participant);
+            if (user == null)
+                throw new ArgumentNullException(nameof(user));
+            
+            var success = participants.TryAdd(user.Id, new Participant { User = user });
+            return success;
         }
 
         /// <summary>
@@ -48,16 +44,35 @@ namespace SimplePlanningPoker.Models
         /// </summary>
         /// <param name="participant"></param>
         /// <returns></returns>
-        public bool RemoveParticipant(User participant)
+        public bool RemoveParticipant(User user)
         {
-            return participants.TryRemove(participant.Id, out _);
+            var success = participants.TryRemove(user.Id, out _);
+            return success;
         }
 
+        public bool ContainsParticipant(string participantId)
+        {
+            return participants.ContainsKey(participantId);
+        }
+
+        /// <summary>
+        /// Gets the participant with the specified ID.
+        /// </summary>
+        /// <param name="participantId">The ID of the participant to get.</param>
+        /// <returns>The participant with the specified ID.</returns>
+        public Participant GetParticipant(string participantId)
+        {
+            if (participantId == null)
+                throw new ArgumentNullException(nameof(participantId));
+
+            participants.TryGetValue(participantId, out var participant);
+            return participant ?? throw new ParticipantNotFoundException(participantId);
+        }
         /// <summary>
         /// Returns the participants.
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<User> GetParticipants()
+        public IEnumerable<Participant> GetAllParticipants()
         {
             return participants.Values;
         }
@@ -66,9 +81,9 @@ namespace SimplePlanningPoker.Models
         /// Returns the current estimates.
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<string> GetEstimates()
+        public IEnumerable<string?> GetEstimates()
         {
-            return estimates.Values.ToImmutableArray();
+            return participants.Values?.Select(p => p.Estimate) ?? Enumerable.Empty<string?>();
         }
 
         /// <summary>
@@ -81,26 +96,23 @@ namespace SimplePlanningPoker.Models
         /// <see cref="EstimationResult.Failed"/>, if failed.</returns>
         public EstimationResult Estimate(string participantId, string estimate)
         {
+            if (participantId == null)
+                throw new ArgumentNullException(nameof(participantId));
+            if (estimate == null)
+                throw new ArgumentNullException(nameof(estimate));
+            if (!CardSet.Contains(estimate))
+                throw new ArgumentException($"Estimate {estimate} is not in the card set.");
             if (!participants.ContainsKey(participantId))
-            {
                 throw new ArgumentException($"Participant with token {participantId} not found.");
-            }
-            var added = estimates.TryAdd(participantId, estimate);
-            if (added)
-            {
-                return EstimationResult.Success;
-            }
-            estimates.TryGetValue(participantId, out var currentEstimate);
-            if (currentEstimate == null)
-            {
+
+            participants.TryGetValue(participantId, out var participant);
+
+            if (participant == null)
                 return EstimationResult.Failed;
-            }
-            else
-            {
-                return estimates.TryUpdate(participantId, estimate, currentEstimate)
-                    ? EstimationResult.Success
-                    : EstimationResult.Failed;
-            }
+
+            participant.Estimate = estimate;
+
+            return EstimationResult.Success;
         }
 
         /// <summary>
@@ -108,23 +120,23 @@ namespace SimplePlanningPoker.Models
         /// </summary>
         public void ResetEstimates()
         {
-            estimates = new ConcurrentDictionary<string, string>();
+            participants.Values
+            .AsParallel()
+            .ForAll(p => p.Estimate = null);
         }
-    }
 
-    /// <summary>
-    /// Result of an estimate operation.
-    /// </summary>
-    public enum EstimationResult
-    {
-        /// <summary>
-        /// The estimate was added.
-        /// </summary>
-        Success,
-        /// <summary>
-        /// The estimate failed.
-        /// </summary>
-        Failed
+        public void FlipCards()
+        {
+            State = new ShowState(this);
+        }
+
+        public void Reset()
+        {
+            State = new ChooseState(this);
+            ResetEstimates();
+        }      
+
+        #endregion
     }
 
 }

@@ -15,7 +15,7 @@ public class CardSetTests
             };
 
             // Act
-            var result = cardSet.IsValidValue("5");
+            var result = cardSet.Contains("5");
 
             // Assert
             Assert.True(result);
@@ -32,7 +32,7 @@ public class CardSetTests
             };
 
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => cardSet.IsValidValue(null));
+            Assert.Throws<ArgumentNullException>(() => cardSet.Contains(null));
         }
 
         [Fact]
@@ -46,7 +46,7 @@ public class CardSetTests
             };
 
             // Act
-            var result = cardSet.IsValidValue("4");
+            var result = cardSet.Contains("4");
 
             // Assert
             Assert.False(result);

@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 using SimplePlanningPoker.Models;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using Microsoft.AspNetCore.SignalR;
+using SimplePlanningPoker.Hubs;
 
 public class RoomControllerTests
 {
@@ -25,10 +27,11 @@ public class RoomControllerTests
     {
         // Arrange
         var expectedRoomId = "12345";
-        var roomManager = new Mock<IRoomManager>();
-        roomManager.Setup(x => x.CreateRoom()).Returns((AddRoomResult.Success, expectedRoomId));
+        var roomManagerMock = new Mock<IRoomManager>();
+        roomManagerMock.Setup(x => x.CreateRoom()).Returns((AddRoomResult.Success, expectedRoomId));
 
-        var controller = new RoomController(_logger, roomManager.Object);
+        var hubContextMock = new Mock<IHubContext<RoomHub>>();
+        var controller = new RoomController(_logger, roomManagerMock.Object, hubContextMock.Object);
 
         // Act
         var actionResult = await controller.Create();
@@ -44,8 +47,8 @@ public class RoomControllerTests
     {
         // Arrange
         var roomManagerMock = new Mock<IRoomManager>();
-
-        var controller = new RoomController(_logger, roomManagerMock.Object);
+        var hubContextMock = new Mock<IHubContext<RoomHub>>();
+        var controller = new RoomController(_logger, roomManagerMock.Object, hubContextMock.Object);
         // Act
         var result = await controller.Estimate(null, "5");
 
@@ -59,8 +62,8 @@ public class RoomControllerTests
     {
         // Arrange
         var roomManagerMock = new Mock<IRoomManager>();
-
-        var controller = new RoomController(_logger, roomManagerMock.Object);
+        var hubContextMock = new Mock<IHubContext<RoomHub>>();
+        var controller = new RoomController(_logger, roomManagerMock.Object, hubContextMock.Object);
 
         // Act
         var result = await controller.Estimate("123", null);
@@ -76,12 +79,13 @@ public class RoomControllerTests
         // Arrange
         var user = new User() { Id = "user1", Name = "Bob" };
         var httpContext = new Mock<HttpContext>();
-        httpContext.Setup(c => c.User).Returns(new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim("name", user.Name) })));
+        httpContext.Setup(c => c.User).Returns(new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim("name", user.Name), new Claim("user_id", user.Id) })));
         var roomManagerMock = new Mock<IRoomManager>();
         roomManagerMock.Setup(x => x.GetRoomAsync("123")).ReturnsAsync((Room)null);
-
-        var controller = new RoomController(_logger, roomManagerMock.Object);
+        var hubContextMock = new Mock<IHubContext<RoomHub>>();
+        var controller = new RoomController(_logger, roomManagerMock.Object, hubContextMock.Object);
         controller.ControllerContext.HttpContext = httpContext.Object;
+
         // Act
         var result = await controller.Estimate("123", "5");
 
@@ -90,43 +94,28 @@ public class RoomControllerTests
         Assert.Equal("Room not found", badRequestResult.Value);
     }
 
-    [Fact(Skip = "Moq is not working correctly")]
+    [Fact]
     public async Task Estimate_ReturnsOk_WhenEstimationAddedSuccessfully()
     {
         // Arrange
         var user = new User() { Id = "user1", Name = "Bob" };
-        
-        var roomManagerMock = new Mock<IRoomManager>();
-        var roomMock = new Mock<Room>();
-        roomMock.Setup(x => x.Estimate("user1", "5")).Returns(EstimationResult.Success);
-        roomManagerMock.Setup(x => x.GetRoomAsync("123")).ReturnsAsync(roomMock.Object);
-        var controller = new RoomController(_logger, roomManagerMock.Object);
 
+        var roomManagerMock = new Mock<IRoomManager>();
+        var room = new Room("123");
+        room.AddParticipant(user);
+        roomManagerMock.Setup(x => x.GetRoomAsync("123")).ReturnsAsync(room);
+        var hubContextMock = new Mock<IHubContext<RoomHub>>();
+        var httpContext = new Mock<HttpContext>();
+        httpContext.Setup(c => c.User).Returns(new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim("name", user.Name), new Claim("user_id", user.Id) })));
+        hubContextMock.Setup(x => x.Clients.Group("123")).Returns(new Mock<IClientProxy>().Object);
+        var controller = new RoomController(_logger, roomManagerMock.Object, hubContextMock.Object);
+        controller.ControllerContext.HttpContext = httpContext.Object;
         // Act
         var result = await controller.Estimate("123", "5");
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.Equal("Estimate added successfully", okResult.Value);
-    }
-
-    [Fact(Skip = "Moq is not working correctly")]
-    public async Task Estimate_ReturnsBadRequest_WhenEstimationFailed()
-    {
-        // Arrange
-        var roomManagerMock = new Mock<IRoomManager>();
-        var roomMock = new Mock<Room>();
-        roomMock.Setup(x => x.Estimate("user1", "5")).Returns(EstimationResult.Failed);
-        roomManagerMock.Setup(x => x.GetRoomAsync("123")).ReturnsAsync(roomMock.Object);
-
-        var controller = new RoomController(_logger, roomManagerMock.Object);
-
-        // Act
-        var result = await controller.Estimate("123", "5");
-
-        // Assert
-        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-        Assert.Equal("Failed to add estimate", badRequestResult.Value);
+        Assert.Equal("Estimated successfully", okResult.Value);
     }
 
     [Fact]
@@ -136,7 +125,8 @@ public class RoomControllerTests
         var roomManagerMock = new Mock<IRoomManager>();
         roomManagerMock.Setup(x => x.CreateRoom()).Returns((AddRoomResult.Failed, string.Empty));
 
-        var controller = new RoomController(_logger, roomManagerMock.Object);
+        var hubContextMock = new Mock<IHubContext<RoomHub>>();
+        var controller = new RoomController(_logger, roomManagerMock.Object, hubContextMock.Object);
 
         // Act
         var result = await controller.Create();
@@ -154,7 +144,8 @@ public class RoomControllerTests
         var roomManagerMock = new Mock<IRoomManager>();
         roomManagerMock.Setup(x => x.CreateRoom()).Returns((AddRoomResult.Success, roomId));
 
-        var controller = new RoomController(_logger, roomManagerMock.Object);
+        var hubContextMock = new Mock<IHubContext<RoomHub>>();
+        var controller = new RoomController(_logger, roomManagerMock.Object, hubContextMock.Object);
 
         // Act
         var result = await controller.Create();

@@ -21,7 +21,7 @@ namespace SimplePlanningPokerTests.Models
 
 			// Assert 
 			Assert.True(result);
-			var participants = room.GetParticipants();
+			var participants = room.GetAllParticipants();
 			Assert.Single(participants);
 		}
 
@@ -38,7 +38,7 @@ namespace SimplePlanningPokerTests.Models
 
 			// Assert
 			Assert.False(result);
-			var participants = room.GetParticipants();
+			var participants = room.GetAllParticipants();
 			Assert.Single(participants);
 		}
 
@@ -66,9 +66,9 @@ namespace SimplePlanningPokerTests.Models
 			});
 
 			// Assert
-			var participants = room.GetParticipants();
+			var participants = room.GetAllParticipants();
 			Assert.Equal(10, participants.Count());
-			Assert.Equal(10, participants.Select(u => u.Id).Distinct().Count());
+			Assert.Equal(10, participants.Select(u => u.User.Id).Distinct().Count());
 		}
 
 		[Fact]
@@ -85,7 +85,7 @@ namespace SimplePlanningPokerTests.Models
 
 			// Assert
 			Assert.True(result);
-			var participants = room.GetParticipants();
+			var participants = room.GetAllParticipants();
 			Assert.Empty(participants);
 
 		}
@@ -120,8 +120,8 @@ namespace SimplePlanningPokerTests.Models
 
 			// Assert
 			Assert.True(result);
-			var participants = room.GetParticipants();
-			Assert.DoesNotContain(user, participants);
+			var participants = room.GetAllParticipants();
+			Assert.DoesNotContain(user, participants.Select(p => p.User));
 
 		}
 
@@ -168,7 +168,7 @@ namespace SimplePlanningPokerTests.Models
 			var room = new Room("123");
 
 			// Act & Assert
-			Assert.Throws<ArgumentException>(()=> room.Estimate("xyz", "5")); 
+			Assert.Throws<ArgumentException>(() => room.Estimate("xyz", "5"));
 
 		}
 
@@ -195,7 +195,43 @@ namespace SimplePlanningPokerTests.Models
 		}
 
 
+		[Fact]
+		public void ResetEstimates_WithParticipants_ResetsAllEstimatesToNull()
+		{
+			// Arrange
+			var room = new Room("123");
+			var user1 = new User { Id = "1", Name = "User 1" };
+			var user2 = new User { Id = "2", Name = "User 2" };
 
+			room.AddParticipant(user1);
+			room.AddParticipant(user2);
+			var participant1 = room.GetParticipant(user1.Id);
+			var participant2 = room.GetParticipant(user2.Id);
+			room.Estimate(user1.Id, "5");
+			room.Estimate(user2.Id, "8");
+
+			// Act
+			room.ResetEstimates();
+
+			// Assert
+			Assert.Null(participant1.Estimate);
+			Assert.Null(participant2.Estimate);
+		}
+
+		[Fact]
+		public void Reset_ResetsStateAndEstimates()
+		{
+			// Arrange
+			var room = new Room("123");
+			room.FlipCards();
+
+			// Act 
+			room.Reset();
+
+			// Assert
+			Assert.IsType<ChooseState>(room.State);
+			Assert.Empty(room.GetEstimates());
+		}
 
 
 
