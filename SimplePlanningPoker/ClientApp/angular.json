@@ -33,8 +33,10 @@
 							"src/assets"
 						],
 						"styles": [
+							"node_modules/bootstrap-icons/font/bootstrap-icons.css",
 							"node_modules/bootstrap/dist/css/bootstrap.min.css",
-							"src/styles.scss"
+							"src/scss/styles.scss",
+							"src/scss/custom.scss"
 						],
 						"scripts": []
 					},

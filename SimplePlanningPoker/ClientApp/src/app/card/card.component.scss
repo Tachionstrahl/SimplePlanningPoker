@@ -1,0 +1,23 @@
+@import "../../scss/custom.scss";
+
+.pp-card {
+    background-color: $secondary;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    max-width: 10rem;
+    width: 10rem;
+    min-height: 15rem;
+}
+
+.pp-card:hover {
+    color: $secondary;
+    background-color: $primary;
+    cursor: pointer;
+}
+
+.pp-card.selected {
+    color: $secondary;
+    background-color: $primary;
+}

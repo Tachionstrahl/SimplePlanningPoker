@@ -1,3 +1,5 @@
+@import '../../scss/variables';
+
 a.navbar-brand {
   white-space: normal;
   text-align: center;
@@ -14,6 +16,21 @@ html {
 }
 
 .box-shadow {
-  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05);
 }
 
+.logo-simple {
+  color: $accent;
+  font-size: 0.75rem;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  vertical-align: super;
+}
+
+.logo-planning-poker {
+  font-size: 1.5rem;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+}
