@@ -45,6 +45,11 @@ namespace SimplePlanningPoker.Managers
             return await Task.FromResult(rooms.TryGetValue(roomId, out Room? room) ? room : null);
         }
 
+        public Task<Room?> GetRoomByParticipant(User participant)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Adds a participant to a room. Returns <see cref="true"/>, if successful.
         /// </summary>

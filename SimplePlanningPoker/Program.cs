@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using NSwag;
 using NSwag.Generation.Processors.Security;
+using SimplePlanningPoker;
 using SimplePlanningPoker.Hubs;
 using SimplePlanningPoker.Managers;
 
@@ -12,40 +13,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddControllers();
-builder.Services.AddOpenApiDocument(c => {
-    c.AddSecurity("apikey", Enumerable.Empty<string>(), new() {
-        Type = OpenApiSecuritySchemeType.Http,
-        Scheme = JwtBearerDefaults.AuthenticationScheme,
-        BearerFormat = "JWT", 
-        Description = "Type into the textbox: {your JWT token}."
-        
-    });
-    c.OperationProcessors.Add(
-        new AspNetCoreOperationSecurityScopeProcessor("apikey"));
-});
-
+builder.Services.AddOpenApiDocument();
 builder.Services.AddSignalR();
-builder.Services.AddSingleton<IRoomManager, RoomManager>();
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(o =>
-{
-    o.TokenValidationParameters = new TokenValidationParameters  
-                {  
-                    ValidateIssuer = true,  
-                    ValidateAudience = true,  
-                    ValidateLifetime = false,  
-                    ValidateIssuerSigningKey = true,  
-                    ValidIssuer = builder.Configuration["Jwt:Issuer"],  
-                    ValidAudience = builder.Configuration["Jwt:Issuer"],  
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])) //Configuration["JwtToken:SecretKey"]  
-                }; 
-});
-builder.Services.AddAuthorization();
+builder.Services.AddSingleton<IRoomManager, RoomManager>();
+builder.Services.AddSingleton<IUserManager, UserManager>();
 
 var app = builder.Build();
 
@@ -70,10 +42,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller}/{action=Index}/{id?}");
 
-app.MapHub<RoomHub>("/Room").AllowAnonymous();
-
-app.UseAuthentication();
-app.UseAuthorization();
+app.MapHub<RoomHub>("/roomhub").AllowAnonymous();
 
 app.MapFallbackToFile("index.html");
 

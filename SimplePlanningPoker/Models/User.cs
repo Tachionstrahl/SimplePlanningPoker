@@ -1,10 +1,14 @@
 ﻿using System;
 namespace SimplePlanningPoker.Models
 {
-	public class User
-	{
-		public required string Id { get; set; }
-		public required string Name { get; set; }
-	}
+    public record User(
+        string ConnectionId, string Name, string? Estimate)
+    {
+        public User(string ConnectionId, string Name): this(ConnectionId, Name, null)
+		{
+			
+		}
+    }
+
 }
 

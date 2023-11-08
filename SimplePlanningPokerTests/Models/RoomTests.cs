@@ -14,7 +14,7 @@ namespace SimplePlanningPokerTests.Models
 		{
 			// Arrange
 			var room = new Room("123");
-			var user = new User { Id = "abc", Name = "Bob" };
+			var user = new User { ConnectionId = "abc", Name = "Bob" };
 
 			// Act
 			var result = room.AddParticipant(user);
@@ -30,7 +30,7 @@ namespace SimplePlanningPokerTests.Models
 		{
 			// Arrange
 			var room = new Room("123");
-			var user = new User { Id = "abc", Name = "Bob" };
+			var user = new User { ConnectionId = "abc", Name = "Bob" };
 			room.AddParticipant(user);
 
 			// Act
@@ -47,7 +47,7 @@ namespace SimplePlanningPokerTests.Models
 		{
 			// Arrange
 			var room = new Room("123");
-			var user = new User { Name = "Bob", Id = null };
+			var user = new User { Name = "Bob", ConnectionId = null };
 
 			// Act & Assert
 			Assert.Throws<ArgumentNullException>(() => room.AddParticipant(user));
@@ -62,13 +62,13 @@ namespace SimplePlanningPokerTests.Models
 			// Act
 			Parallel.For(0, 10, i =>
 			{
-				room.AddParticipant(new User { Name = $"User{i}", Id = Guid.NewGuid().ToString() });
+				room.AddParticipant(new User { Name = $"User{i}", ConnectionId = Guid.NewGuid().ToString() });
 			});
 
 			// Assert
 			var participants = room.GetAllParticipants();
 			Assert.Equal(10, participants.Count());
-			Assert.Equal(10, participants.Select(u => u.User.Id).Distinct().Count());
+			Assert.Equal(10, participants.Select(u => u.User.ConnectionId).Distinct().Count());
 		}
 
 		[Fact]
@@ -77,7 +77,7 @@ namespace SimplePlanningPokerTests.Models
 
 			// Arrange
 			var room = new Room("123");
-			var user = new User { Id = "abc", Name = "Bob" };
+			var user = new User { ConnectionId = "abc", Name = "Bob" };
 			room.AddParticipant(user);
 
 			// Act
@@ -96,7 +96,7 @@ namespace SimplePlanningPokerTests.Models
 
 			// Arrange
 			var room = new Room("123");
-			var user = new User { Id = "abc", Name = "Bob" };
+			var user = new User { ConnectionId = "abc", Name = "Bob" };
 
 			// Act
 			var result = room.RemoveParticipant(user);
@@ -112,7 +112,7 @@ namespace SimplePlanningPokerTests.Models
 
 			// Arrange
 			var room = new Room("123");
-			var user = new User { Id = "abc", Name = "Bob" };
+			var user = new User { ConnectionId = "abc", Name = "Bob" };
 			room.AddParticipant(user);
 
 			// Act
@@ -131,11 +131,11 @@ namespace SimplePlanningPokerTests.Models
 
 			// Arrange
 			var room = new Room("123");
-			var user = new User { Id = "abc", Name = "Bob" };
+			var user = new User { ConnectionId = "abc", Name = "Bob" };
 			room.AddParticipant(user);
 
 			// Act
-			var result = room.Estimate(user.Id, "5");
+			var result = room.Estimate(user.ConnectionId, "5");
 
 			// Assert
 			Assert.Equal(EstimationResult.Success, result);
@@ -148,12 +148,12 @@ namespace SimplePlanningPokerTests.Models
 
 			// Arrange
 			var room = new Room("123");
-			var user = new User { Id = "abc", Name = "Bob" };
+			var user = new User { ConnectionId = "abc", Name = "Bob" };
 			room.AddParticipant(user);
-			room.Estimate(user.Id, "3");
+			room.Estimate(user.ConnectionId, "3");
 
 			// Act
-			var result = room.Estimate(user.Id, "5");
+			var result = room.Estimate(user.ConnectionId, "5");
 
 			// Assert
 			Assert.Equal(EstimationResult.Success, result);
@@ -177,7 +177,7 @@ namespace SimplePlanningPokerTests.Models
 		{
 			// Arrange
 			var room = new Room("123");
-			var users = Enumerable.Range(1, 10).Select(i => new User { Name = $"User{i}", Id = Guid.NewGuid().ToString() }).ToList();
+			var users = Enumerable.Range(1, 10).Select(i => new User { Name = $"User{i}", ConnectionId = Guid.NewGuid().ToString() }).ToList();
 			foreach (var user in users)
 			{
 				room.AddParticipant(user);
@@ -186,7 +186,7 @@ namespace SimplePlanningPokerTests.Models
 			// Act
 			Parallel.ForEach(users, user =>
 			{
-				room.Estimate(user.Id, "5");
+				room.Estimate(user.ConnectionId, "5");
 			});
 
 			// Assert
@@ -200,15 +200,15 @@ namespace SimplePlanningPokerTests.Models
 		{
 			// Arrange
 			var room = new Room("123");
-			var user1 = new User { Id = "1", Name = "User 1" };
-			var user2 = new User { Id = "2", Name = "User 2" };
+			var user1 = new User { ConnectionId = "1", Name = "User 1" };
+			var user2 = new User { ConnectionId = "2", Name = "User 2" };
 
 			room.AddParticipant(user1);
 			room.AddParticipant(user2);
-			var participant1 = room.GetParticipant(user1.Id);
-			var participant2 = room.GetParticipant(user2.Id);
-			room.Estimate(user1.Id, "5");
-			room.Estimate(user2.Id, "8");
+			var participant1 = room.GetParticipant(user1.ConnectionId);
+			var participant2 = room.GetParticipant(user2.ConnectionId);
+			room.Estimate(user1.ConnectionId, "5");
+			room.Estimate(user2.ConnectionId, "8");
 
 			// Act
 			room.ResetEstimates();
@@ -223,7 +223,7 @@ namespace SimplePlanningPokerTests.Models
 		{
 			// Arrange
 			var room = new Room("123");
-			room.FlipCards();
+			room.Reveal();
 
 			// Act 
 			room.Reset();

@@ -25,17 +25,18 @@ namespace SimplePlanningPoker.Models
         /// The unique identifier of the room.
         /// </summary>
         public string RoomId { get; }
-        public CardSet CardSet { get; set; } = CardSets.Default;
+        public CardSet CardSet { get; private set; } = CardSets.Default;
 
         public RoomState State { get; private set; }
 
         #region Public Methods
+
         public bool AddParticipant(User user)
         {
             if (user == null)
                 throw new ArgumentNullException(nameof(user));
-            
-            var success = participants.TryAdd(user.Id, new Participant { User = user });
+
+            var success = participants.TryAdd(user.ConnectionId, new Participant { User = user });
             return success;
         }
 
@@ -46,7 +47,7 @@ namespace SimplePlanningPoker.Models
         /// <returns></returns>
         public bool RemoveParticipant(User user)
         {
-            var success = participants.TryRemove(user.Id, out _);
+            var success = participants.TryRemove(user.ConnectionId, out _);
             return success;
         }
 
@@ -125,7 +126,7 @@ namespace SimplePlanningPoker.Models
             .ForAll(p => p.Estimate = null);
         }
 
-        public void FlipCards()
+        public void Reveal()
         {
             State = new ShowState(this);
         }
@@ -134,9 +135,10 @@ namespace SimplePlanningPoker.Models
         {
             State = new ChooseState(this);
             ResetEstimates();
-        }      
+        }
 
         #endregion
+
     }
 
 }

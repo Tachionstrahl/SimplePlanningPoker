@@ -1,78 +1,160 @@
-﻿using System;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using SimplePlanningPoker.Managers;
 using SimplePlanningPoker.Models;
-
 namespace SimplePlanningPoker.Hubs
 {
-    public class RoomHub : Hub
+    /// <summary>
+    /// RoomHub handles real-time communication between server and clients for a room. 
+    /// </summary>
+    public class RoomHub : Hub<IRoomHub>
     {
         private readonly IRoomManager roomManager;
+        private readonly IUserManager userManager;
 
-        public RoomHub(IRoomManager roomManager)
+        public RoomHub(IRoomManager roomManager, IUserManager userManager)
         {
             this.roomManager = roomManager;
+            this.userManager = userManager;
         }
 
-        public async Task JoinGroup(string roomId)
+        public override async Task OnConnectedAsync()
         {
-            var user = GetUserFromHttpContext();
-            var room = await roomManager.GetRoomAsync(roomId) ?? throw new ArgumentException($"Room with ID {roomId} does not exist.");
-            if (!room.ContainsParticipant(user.Id)){
-                throw new NotAParticipantException(roomId);
-            }
-            
-            await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
-        }
-
-        public async Task LeaveGroup(string roomId)
-        {
-            await roomManager.LeaveRoomAsync(Context.ConnectionId, GetUserFromHttpContext());
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId);
+            await base.OnConnectedAsync();
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            var success = await roomManager.LeaveRoomAsync(Context.ConnectionId, GetUserFromHttpContext());
-            if (!success)
-                throw new ArgumentException($"User with ID {Context.ConnectionId} does not exist.");
+            await RemoveFromAllRooms();
+            await base.OnDisconnectedAsync(exception);
         }
 
-        public async Task Send(string name, string message)
+        /// <summary>
+        /// Joins the user to the room with the given ID.
+        /// </summary>
+        /// <param name="roomId">ID of the room to join</param>
+        /// <param name="username">The name of the joining user</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public async Task Join(string roomId, string username)
         {
-            // Call the broadcastMessage method to update clients.
-            await Clients.All.SendAsync("broadcastMessage", name, message + " back.");
+            if (string.IsNullOrEmpty(roomId))
+                throw new ArgumentNullException(nameof(roomId));
+            if (string.IsNullOrEmpty(username))
+                throw new ArgumentNullException(nameof(username));
+
+            var user = CreateAndAddUser();
+            var room = await roomManager.GetRoomAsync(roomId) ?? throw new ArgumentException($"Room with ID {roomId} does not exist.");
+            room.AddParticipant(user);
+            await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
+            await SendRoomState(room.RoomId);
         }
 
+        /// <summary>
+        /// Sends the current state of the room to all clients in the group.
+        /// </summary>
+        /// <param name="roomId">The ID of the room</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
         public async Task SendRoomState(string roomId)
         {
+            if (string.IsNullOrEmpty(roomId))
+                throw new ArgumentNullException(nameof(roomId));
+
             var room = await roomManager.GetRoomAsync(roomId) ?? throw new ArgumentException($"Room with ID {roomId} does not exist.");
-            // Call the broadcastMessage method to update clients.
-            await Clients.Group(roomId).SendAsync(RoomHubMessages.SendRoomState, room.State);
+
+            await Clients.Group(roomId).SendRoomState(room.State);
         }
 
-        private User GetUserFromHttpContext()
+        /// <summary>
+        /// Allows a participant to submit an estimate for the current story. 
+        /// Gets the current user and room instance. 
+        /// Calls the room's Estimate method to record the estimate.
+        /// Sends an updated room state to all participants after estimating.
+        /// </summary>
+        public async Task Estimate(string estimate)
         {
-            var user = new User()
+            if (string.IsNullOrEmpty(estimate))
             {
-                Name = Context.User?.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Name)?.Value ?? throw new ArgumentNullException("User has no name"),
-                Id = Context.User?.Claims.FirstOrDefault(c => c.Type == "user_id")?.Value ?? throw new ArgumentNullException("User has no ID")
-            };
+                throw new ArgumentException("estimate is required");
+            }
+            var user = GetUser();
+            var room = await GetRoom();
 
+            room?.Estimate(user.ConnectionId, estimate);
+            await SendRoomState(room!.RoomId);
+        }
+
+        /// <summary>
+        /// Reveals all estimations
+        /// </summary>
+        /// <returns></returns>
+        public async Task Reveal()
+        {
+            var user = GetUser();
+            var room = await GetRoom();
+            if (room != null)
+            {
+                room.Reveal();
+                await SendRoomState(room.RoomId);
+            }
+        }
+        /// <summary>
+        /// Resets the room
+        /// </summary>
+        /// <returns></returns>
+        public async Task Reset()
+        {
+            var user = GetUser();
+            var room = await GetRoom();
+            if (room != null)
+            {
+                room.Reset();
+                await SendRoomState(room.RoomId);
+            }
+        }
+
+        private User GetUser()
+        {
+            var success = userManager.TryGetUser(Context.ConnectionId, out var user);
+            if (!success)
+                throw new ParticipantNotFoundException(Context.ConnectionId);
+            return user!;
+        }
+
+        private User CreateAndAddUser()
+        {
+            var username = GetQueryValue("username") ?? throw new ArgumentException("Username must be a query parameter");
+            var connectionId = Context.ConnectionId;
+            var user = new User(connectionId, username, null);
+            userManager.TryAddUser(user);
             return user;
         }
-    }
 
-    /// <summary>
-    /// Contains the names of the messages that can be sent from the <see cref="RoomHub"/>.
-    /// </summary>
-    public static class RoomHubMessages {    
-        /// <summary>
-        /// The name of the message that sends the state of the room.
-        /// </summary>
-        public const string SendRoomState = "sendRoomState";
-        
+        private async Task RemoveFromAllRooms()
+        {
+            var user = GetUser();
+            var room = await GetRoom();
+            if (room != null)
+            {
+                room.RemoveParticipant(user);
+                await SendRoomState(room.RoomId);
+            }
+
+        }
+
+        private async Task<Room?> GetRoom()
+        {
+            var user = GetUser();
+            return await roomManager.GetRoomByParticipant(user);
+
+        }
+
+        private string? GetQueryValue(string queryKey)
+        {
+            var httpContext = Context.GetHttpContext() ?? throw new HubException("Could not get HttpContext");
+            return httpContext.Request.Query[queryKey].Single();
+        }
     }
 }
 

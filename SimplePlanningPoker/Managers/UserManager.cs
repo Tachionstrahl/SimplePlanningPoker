@@ -1,31 +1,38 @@
 ﻿using System.Collections.Concurrent;
+using SimplePlanningPoker.Models;
 namespace SimplePlanningPoker.Managers
 {
-    
-
-    public class UserManager
+    public class UserManager : IUserManager
     {
-        private readonly ConcurrentDictionary<string, string> userTokens;
+        private readonly ConcurrentDictionary<string, User> users;
 
         public UserManager()
         {
-            userTokens = new ConcurrentDictionary<string, string>();
+            users = new ConcurrentDictionary<string, User>();
         }
 
-        public async Task<string?> GenerateUserTokenAsync()
+        public IEnumerable<User> GetAllUsers()
         {
-            string token = Guid.NewGuid().ToString();
-            return await Task.Run(() => userTokens.TryAdd(token, token) ? token : null);
+            return users.Values;
         }
 
-        public Task<bool> IsValidUserTokenAsync(string token)
+        public bool TryGetUser(string userId, out User? user)
         {
-            return Task.Run(() => userTokens.ContainsKey(token));
+            return users.TryGetValue(userId, out user);
+        }
+        public bool ContainsUser(string userId)
+        {
+            return users.ContainsKey(userId);
         }
 
-        public Task<bool> RemoveUserTokenAsync(string token)
+        public bool TryRemoveUser(string userId, out User? user)
         {
-            return Task.Run(() => userTokens.TryRemove(token, out _));
+            return users.TryRemove(userId, out user);
+        }
+
+        public bool TryAddUser(User user)
+        {
+            return users.TryAdd(user.ConnectionId, user);
         }
     }
 

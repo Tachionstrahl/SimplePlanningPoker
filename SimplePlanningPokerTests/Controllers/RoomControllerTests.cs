@@ -77,9 +77,9 @@ public class RoomControllerTests
     public async Task Estimate_ReturnsBadRequest_WhenRoomNotFound()
     {
         // Arrange
-        var user = new User() { Id = "user1", Name = "Bob" };
+        var user = new User() { ConnectionId = "user1", Name = "Bob" };
         var httpContext = new Mock<HttpContext>();
-        httpContext.Setup(c => c.User).Returns(new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim("name", user.Name), new Claim("user_id", user.Id) })));
+        httpContext.Setup(c => c.User).Returns(new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim("name", user.Name), new Claim("user_id", user.ConnectionId) })));
         var roomManagerMock = new Mock<IRoomManager>();
         roomManagerMock.Setup(x => x.GetRoomAsync("123")).ReturnsAsync((Room)null);
         var hubContextMock = new Mock<IHubContext<RoomHub>>();
@@ -98,7 +98,7 @@ public class RoomControllerTests
     public async Task Estimate_ReturnsOk_WhenEstimationAddedSuccessfully()
     {
         // Arrange
-        var user = new User() { Id = "user1", Name = "Bob" };
+        var user = new User() { ConnectionId = "user1", Name = "Bob" };
 
         var roomManagerMock = new Mock<IRoomManager>();
         var room = new Room("123");
@@ -106,7 +106,7 @@ public class RoomControllerTests
         roomManagerMock.Setup(x => x.GetRoomAsync("123")).ReturnsAsync(room);
         var hubContextMock = new Mock<IHubContext<RoomHub>>();
         var httpContext = new Mock<HttpContext>();
-        httpContext.Setup(c => c.User).Returns(new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim("name", user.Name), new Claim("user_id", user.Id) })));
+        httpContext.Setup(c => c.User).Returns(new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim("name", user.Name), new Claim("user_id", user.ConnectionId) })));
         hubContextMock.Setup(x => x.Clients.Group("123")).Returns(new Mock<IClientProxy>().Object);
         var controller = new RoomController(_logger, roomManagerMock.Object, hubContextMock.Object);
         controller.ControllerContext.HttpContext = httpContext.Object;

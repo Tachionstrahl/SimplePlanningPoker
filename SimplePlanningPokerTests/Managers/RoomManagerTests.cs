@@ -44,7 +44,7 @@ public class RoomManagerTests
         var id = roomManager.CreateRoom();
 
         // Act
-        var result = roomManager.JoinRoomAsync(id.Item2, new User { Name = "Bob", Id = "4711" }).Result;
+        var result = roomManager.JoinRoomAsync(id.Item2, new User { Name = "Bob", ConnectionId = "4711" }).Result;
 
         // Assert
         Assert.True(result);
@@ -56,7 +56,7 @@ public class RoomManagerTests
         // Arrange
 
         // Act
-        var result = roomManager.JoinRoomAsync("4711", new User { Name = "Bob", Id = "4711" }).Result;
+        var result = roomManager.JoinRoomAsync("4711", new User { Name = "Bob", ConnectionId = "4711" }).Result;
 
         // Assert
         Assert.False(result);
@@ -68,8 +68,8 @@ public class RoomManagerTests
         // Arrange
         var id = roomManager.CreateRoom();
         // Act
-        var resultOne = roomManager.JoinRoomAsync(id.Item2, new User { Name = "Bob", Id = "4711" }).Result;
-        var resultTwo = roomManager.JoinRoomAsync(id.Item2, new User { Name = "Bob", Id = "4711" }).Result;
+        var resultOne = roomManager.JoinRoomAsync(id.Item2, new User { Name = "Bob", ConnectionId = "4711" }).Result;
+        var resultTwo = roomManager.JoinRoomAsync(id.Item2, new User { Name = "Bob", ConnectionId = "4711" }).Result;
 
         // Assert
         Assert.True(resultOne);
