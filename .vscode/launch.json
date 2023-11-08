@@ -1,0 +1,34 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Chrome",
+            "request": "launch",
+            "type": "chrome",
+            "url": "https://localhost:7127",
+            "webRoot": "${workspaceFolder}/SimplePlanningPoker/ClientApp",
+            "serverReadyAction": {
+                "pattern": "server listening",
+                "uriFormat": "http://localhost:7127",
+                "action": "openExternally"
+            }
+        },
+        {
+            "name": "C#: SimplePlanningPoker Debug",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": "${workspaceFolder}/SimplePlanningPoker/SimplePlanningPoker.csproj",
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Server/Client",
+            "configurations": [
+                "C#: SimplePlanningPoker Debug",
+                "Launch Chrome"
+            ],
+            "stopAll": true            
+
+        }
+    ]
+}
