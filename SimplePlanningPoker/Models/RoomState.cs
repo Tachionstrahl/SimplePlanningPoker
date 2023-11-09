@@ -1,4 +1,5 @@
 ﻿using System;
+using SimplePlanningPoker.Dtos;
 namespace SimplePlanningPoker.Models
 {
     /// <summary>
@@ -41,14 +42,12 @@ namespace SimplePlanningPoker.Models
     /// </summary>
     public class ChooseState : RoomState
     {
-        public ChooseState(Room room) : base(room)
-        {
-        }
+        public ChooseState(Room room) : base(room) { }
 
         public override RoomStateName RoomStateName => RoomStateName.Choose;
 
         public override IEnumerable<ParticipantDto> Participants => room.GetAllParticipants()
-        .Select(p => new ParticipantDto(p.User.Name, p.Estimated, null));
+        .Select(p => new ParticipantDto(p.Name, p.Estimated, null));
     }
 
     /// <summary>
@@ -56,15 +55,13 @@ namespace SimplePlanningPoker.Models
     /// </summary>
     public class ShowState : RoomState
     {
-        public ShowState(Room room) : base(room)
-        {
-        }
+        public ShowState(Room room) : base(room) { }
 
         /// <summary>
         /// Gets the list of participants in the room with estimates.
         /// </summary>
         public override IEnumerable<ParticipantDto> Participants => room.GetAllParticipants()
-        .Select(p => new ParticipantDto(p.User.Name, p.Estimated, p.Estimate));
+        .Select(p => new ParticipantDto(p.Name, p.Estimated, p.Estimate));
         public override RoomStateName RoomStateName => RoomStateName.Show;
     }
 

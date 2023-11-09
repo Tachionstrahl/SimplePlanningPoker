@@ -2,7 +2,10 @@
 
 namespace SimplePlanningPoker;
 
-public interface IRoomHub
+/// <summary>
+/// Represents server-to-client messages for a hub
+/// </summary>
+public interface IRoomHubClient
 {
     /// <summary>
     /// Sends the room state to all clients in the group.

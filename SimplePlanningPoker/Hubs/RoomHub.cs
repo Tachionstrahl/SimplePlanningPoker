@@ -6,7 +6,7 @@ namespace SimplePlanningPoker.Hubs
     /// <summary>
     /// RoomHub handles real-time communication between server and clients for a room. 
     /// </summary>
-    public class RoomHub : Hub<IRoomHub>
+    public class RoomHub : Hub<IRoomHubClient>
     {
         private readonly IRoomManager roomManager;
         private readonly IUserManager userManager;
@@ -43,29 +43,13 @@ namespace SimplePlanningPoker.Hubs
                 throw new ArgumentNullException(nameof(username));
 
             var user = CreateAndAddUser(username);
-            var room = await roomManager.GetRoomAsync(roomId) ?? throw new ArgumentException($"Room with ID {roomId} does not exist.");
+            var room = roomManager.GetRoom(roomId) ?? throw new ArgumentException($"Room with ID {roomId} does not exist.");
+
             room.AddParticipant(user);
+
             await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
             await SendRoomState(room.RoomId);
         }
-
-        /// <summary>
-        /// Sends the current state of the room to all clients in the group.
-        /// </summary>
-        /// <param name="roomId">The ID of the room</param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="ArgumentException"></exception>
-        public async Task SendRoomState(string roomId)
-        {
-            if (string.IsNullOrEmpty(roomId))
-                throw new ArgumentNullException(nameof(roomId));
-
-            var room = await roomManager.GetRoomAsync(roomId) ?? throw new ArgumentException($"Room with ID {roomId} does not exist.");
-
-            await Clients.Group(roomId).SendRoomState(room.State);
-        }
-
 
         /// <summary>
         /// Allows a participant to submit an estimate for the current story. 
@@ -116,18 +100,35 @@ namespace SimplePlanningPoker.Hubs
             }
         }
 
+        /// <summary>
+        /// Sends the current state of the room to all clients in the group.
+        /// </summary>
+        /// <param name="roomId">The ID of the room</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        private async Task SendRoomState(string roomId)
+        {
+            if (string.IsNullOrEmpty(roomId))
+                throw new ArgumentNullException(nameof(roomId));
+
+            var room = roomManager.GetRoom(roomId) ?? throw new ArgumentException($"Room with ID {roomId} does not exist.");
+
+            await Clients.Group(roomId).SendRoomState(room.State);
+        }
+
         private User GetUser()
         {
             var success = userManager.TryGetUser(Context.ConnectionId, out var user);
             if (!success)
-                throw new ParticipantNotFoundException(Context.ConnectionId);
+                throw new UserNotFoundException(Context.ConnectionId);
             return user!;
         }
 
         private User CreateAndAddUser(string username)
         {
             var connectionId = Context.ConnectionId;
-            var user = new User(connectionId, username, null);
+            var user = new User(connectionId, username);
             userManager.TryAddUser(user);
             return user;
         }

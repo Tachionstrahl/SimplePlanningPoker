@@ -1,9 +1,4 @@
-﻿using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using NSwag;
-using NSwag.Generation.Processors.Security;
-using SimplePlanningPoker;
+﻿using SimplePlanningPoker;
 using SimplePlanningPoker.Hubs;
 using SimplePlanningPoker.Managers;
 

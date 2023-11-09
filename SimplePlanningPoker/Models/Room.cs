@@ -8,7 +8,7 @@ namespace SimplePlanningPoker.Models
     /// </summary>
     public class Room
     {
-        private readonly ConcurrentDictionary<string, Participant> participants;
+        private readonly ConcurrentDictionary<string, User> participants;
 
         /// <summary>
         /// Creates a new room instance.
@@ -17,7 +17,7 @@ namespace SimplePlanningPoker.Models
         public Room(string roomId)
         {
             RoomId = roomId;
-            participants = new ConcurrentDictionary<string, Participant>();
+            participants = new ConcurrentDictionary<string, User>();
             State = new ChooseState(this);
         }
 
@@ -36,7 +36,7 @@ namespace SimplePlanningPoker.Models
             if (user == null)
                 throw new ArgumentNullException(nameof(user));
 
-            var success = participants.TryAdd(user.ConnectionId, new Participant { User = user });
+            var success = participants.TryAdd(user.ConnectionId, user);
             return success;
         }
 
@@ -51,6 +51,9 @@ namespace SimplePlanningPoker.Models
             return success;
         }
 
+        /// <summary>
+        /// Checks if the participant with the given id is member of this room.
+        /// </summary>
         public bool ContainsParticipant(string participantId)
         {
             return participants.ContainsKey(participantId);
@@ -61,19 +64,19 @@ namespace SimplePlanningPoker.Models
         /// </summary>
         /// <param name="participantId">The ID of the participant to get.</param>
         /// <returns>The participant with the specified ID.</returns>
-        public Participant GetParticipant(string participantId)
+        public User GetParticipant(string participantId)
         {
             if (participantId == null)
                 throw new ArgumentNullException(nameof(participantId));
 
             participants.TryGetValue(participantId, out var participant);
-            return participant ?? throw new ParticipantNotFoundException(participantId);
+            return participant ?? throw new UserNotFoundException(participantId);
         }
         /// <summary>
         /// Returns the participants.
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<Participant> GetAllParticipants()
+        public IEnumerable<User> GetAllParticipants()
         {
             return participants.Values;
         }
@@ -90,56 +93,61 @@ namespace SimplePlanningPoker.Models
         /// <summary>
         /// Adds or updates an estimate. 
         /// </summary>
-        /// <param name="participantId"></param>
+        /// <param name="userId"></param>
         /// <param name="estimate"></param>
-        /// <returns><see cref="EstimationResult.Added"/>, if added.
-        /// <see cref="EstimationResult.Updated"/>, if updated.
-        /// <see cref="EstimationResult.Failed"/>, if failed.</returns>
-        public EstimationResult Estimate(string participantId, string estimate)
+        public void Estimate(string userId, string estimate)
+        {
+            ValidateEstimateValue(estimate);
+            ValidateParticipantId(userId);
+
+            participants.TryGetValue(userId, out var user);
+
+            if (user == null)
+                throw new UserNotFoundException(userId);
+
+            user.Estimate = estimate;
+        }
+
+        private void ValidateParticipantId(string participantId)
         {
             if (participantId == null)
                 throw new ArgumentNullException(nameof(participantId));
+            if (!participants.ContainsKey(participantId))
+                throw new ArgumentException($"Participant with token {participantId} not found.");
+        }
+
+        private void ValidateEstimateValue(string estimate)
+        {
             if (estimate == null)
                 throw new ArgumentNullException(nameof(estimate));
             if (!CardSet.Contains(estimate))
                 throw new ArgumentException($"Estimate {estimate} is not in the card set.");
-            if (!participants.ContainsKey(participantId))
-                throw new ArgumentException($"Participant with token {participantId} not found.");
+        }
 
-            participants.TryGetValue(participantId, out var participant);
-
-            if (participant == null)
-                return EstimationResult.Failed;
-
-            participant.Estimate = estimate;
-            participant.Estimated = participant.Estimate != null;
-
-            return EstimationResult.Success;
+        /// <summary>
+        /// Reveals the estimates.
+        /// </summary>
+        public void Reveal()
+        {
+            State = new ShowState(this);
+        }
+        /// <summary>
+        /// Resets the room. Clears all estimates.
+        /// </summary>
+        public void Reset()
+        {
+            State = new ChooseState(this);
+            ResetEstimates();
         }
 
         /// <summary>
         /// Resets the estimates.
         /// </summary>
-        public void ResetEstimates()
+        private void ResetEstimates()
         {
             participants.Values
             .AsParallel()
-            .ForAll(p =>
-            {
-                p.Estimate = null;
-                p.Estimated = false;
-            });
-        }
-
-        public void Reveal()
-        {
-            State = new ShowState(this);
-        }
-
-        public void Reset()
-        {
-            State = new ChooseState(this);
-            ResetEstimates();
+            .ForAll(p => p.Estimate = null);
         }
 
         #endregion

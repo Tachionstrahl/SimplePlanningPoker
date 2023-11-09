@@ -1,15 +1,15 @@
 ﻿namespace SimplePlanningPoker;
 
 /// <summary>
-/// The exception that is thrown when a participant with a given ID is not found.
+/// The exception that is thrown when a user with a given ID is not found.
 /// </summary>
-public class ParticipantNotFoundException : Exception
+public class UserNotFoundException : Exception
 {
     /// <summary>
-    /// Exception thrown when a participant with a given ID cannot be found.
+    /// Exception thrown when a user with a given ID cannot be found.
     /// </summary>
-    public ParticipantNotFoundException(string participantId)
-        : base($"Participant with ID {participantId} not found.")
+    public UserNotFoundException(string userId)
+        : base($"User with ID {userId} not found.")
     {
     }
 

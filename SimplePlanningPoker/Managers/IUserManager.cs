@@ -2,6 +2,9 @@
 
 namespace SimplePlanningPoker;
 
+/// <summary>
+/// A manager for users.
+/// </summary>
 public interface IUserManager
 {
     /// <summary>

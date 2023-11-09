@@ -1,8 +1,5 @@
-﻿
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using SimplePlanningPoker.Managers;
-using SimplePlanningPoker.Models;
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace SimplePlanningPoker.Controllers
@@ -20,13 +17,21 @@ namespace SimplePlanningPoker.Controllers
             this.roomManager = roomManager;
         }
 
-        // GET api/room
+        /// <summary>
+        /// GET api/room
+        /// Creates a new room.
+        /// </summary>
+        /// <returns>The room's ID</returns>
         [HttpGet]
-        public async Task<ActionResult<string>> GetNewRoom()
+        public ActionResult<string> GetNewRoom()
         {
             logger.LogInformation(nameof(GetNewRoom));
-            var result = await Task.Run(() => roomManager.CreateRoom());
-            return result.Item1 == AddRoomResult.Failed ? BadRequest("Creating a room failed.") : Content($"\"{result.Item2}\"", "application/json");
+
+            var result = roomManager.CreateRoom();
+            
+            return result.Item1 == AddRoomResult.Failed
+            ? BadRequest("Creating a room failed.")
+            : Content($"\"{result.Item2}\"", "application/json");
         }
 
     }

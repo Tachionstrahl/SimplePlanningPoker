@@ -10,6 +10,9 @@ namespace SimplePlanningPoker.Managers
     /// </summary>
     public class RoomManager : IRoomManager
     {
+        /// <summary>
+        /// Dictionary of the rooms by their id.
+        /// </summary>
         private readonly ConcurrentDictionary<string, Room> rooms;
 
         public RoomManager()
@@ -29,49 +32,27 @@ namespace SimplePlanningPoker.Managers
             return success ? (AddRoomResult.Success, room.RoomId) : (AddRoomResult.Failed, null);
         }
 
-        public bool DoesRoomExist(string roomId)
-        {
-            return rooms.ContainsKey(roomId);
-        }
-
         /// <summary>
         /// Retrieves a room by its ID.
         /// Returns <see cref="null"/>, if the room does not exist.
         /// </summary>
         /// <param name="roomId"></param>
         /// <returns></returns>
-        public async Task<Room?> GetRoomAsync(string roomId)
+        public Room? GetRoom(string roomId)
         {
-            return await Task.FromResult(rooms.TryGetValue(roomId, out Room? room) ? room : null);
+            return rooms.TryGetValue(roomId, out Room? room) ? room : null;
         }
 
+        /// <summary>
+        /// Retrieves a room by a participant.
+        /// </summary>
+        /// <param name="participant"></param>
+        /// <returns></returns>
         public Room? GetRoomByParticipant(User participant)
         {
             return rooms
                     .FirstOrDefault(r => r.Value.ContainsParticipant(participant.ConnectionId))
                     .Value;
-        }
-
-        /// <summary>
-        /// Adds a participant to a room. Returns <see cref="true"/>, if successful.
-        /// </summary>
-        /// <param name="roomId"></param>
-        /// <param name="participant"></param>
-        /// <returns></returns>
-        public Task<bool> JoinRoomAsync(string roomId, User participant)
-        {
-            return Task.Run(() => rooms.TryGetValue(roomId, out Room? room) && room.AddParticipant(participant));
-        }
-
-        /// <summary>
-        /// Removes a participant from a room. Returns <see cref="true"/>, if successful.
-        /// </summary>
-        /// <param name="roomId"></param>
-        /// <param name="participant"></param>
-        /// <returns></returns>
-        public Task<bool> LeaveRoomAsync(string roomId, User participant)
-        {
-            return Task.Run(() => rooms.TryGetValue(roomId, out Room? room) && room.RemoveParticipant(participant));
         }
     }
 
