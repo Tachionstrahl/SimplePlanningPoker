@@ -7,7 +7,7 @@ namespace SimplePlanningPoker.Managers
     {
         (AddRoomResult, string?) CreateRoom();
         Task<Room?> GetRoomAsync(string roomId);
-        Task<Room?> GetRoomByParticipant(User participant);
+        Room? GetRoomByParticipant(User participant);
         Task<bool> JoinRoomAsync(string roomId, User participant);
     }
 }

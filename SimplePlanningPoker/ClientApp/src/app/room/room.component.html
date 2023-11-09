@@ -5,7 +5,7 @@
       <div class="d-flex flex-nowrap flex-lg-wrap overflow-auto px-1">
         <app-card
           class="p-2"
-          *ngFor="let card of cards"
+          *ngFor="let card of hub.roomState().cardSet?.values"
           (cardClicked)="select(card)"
           [selected]="card === selectedCard"
           >{{ card }}</app-card
@@ -18,11 +18,11 @@
         <a (click)="copyLink()" class="btn btn-link">Invite</a>
       </div>
       <app-participant
-        *ngFor="let participant of participants"
+        *ngFor="let participant of hub.roomState().participants"
         [value]="participant"
       ></app-participant>
       <div class="d-flex flex-column my-5">
-        <button type="button" class="btn btn-primary" (click)="reveal()" *ngIf="canReveal">
+        <button type="button" class="btn btn-primary" (click)="reveal()" [disabled]="hub.roomState().roomStateName == '1'">
           Reveal
         </button>
         <button type="button" class="btn btn-secondary" (click)="reset()">

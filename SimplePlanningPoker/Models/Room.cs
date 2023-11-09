@@ -112,6 +112,7 @@ namespace SimplePlanningPoker.Models
                 return EstimationResult.Failed;
 
             participant.Estimate = estimate;
+            participant.Estimated = participant.Estimate != null;
 
             return EstimationResult.Success;
         }
@@ -123,7 +124,11 @@ namespace SimplePlanningPoker.Models
         {
             participants.Values
             .AsParallel()
-            .ForAll(p => p.Estimate = null);
+            .ForAll(p =>
+            {
+                p.Estimate = null;
+                p.Estimated = false;
+            });
         }
 
         public void Reveal()

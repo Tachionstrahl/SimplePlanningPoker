@@ -20,13 +20,13 @@ namespace SimplePlanningPoker.Controllers
             this.roomManager = roomManager;
         }
 
-        // POST api/room/create
-        [HttpPost("create")]
-        public async Task<ActionResult<string>> Create()
+        // GET api/room
+        [HttpGet]
+        public async Task<ActionResult<string>> GetNewRoom()
         {
-            logger.LogInformation(nameof(Create));
+            logger.LogInformation(nameof(GetNewRoom));
             var result = await Task.Run(() => roomManager.CreateRoom());
-            return result.Item1 == AddRoomResult.Failed ? BadRequest("Creating a room failed.") : Ok(result.Item2);
+            return result.Item1 == AddRoomResult.Failed ? BadRequest("Creating a room failed.") : Content($"\"{result.Item2}\"", "application/json");
         }
 
     }

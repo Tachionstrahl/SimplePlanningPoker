@@ -15,5 +15,5 @@ export interface IParticipant {
      * Undefined if not estimated
      * @example "8"
      */
-    estimation?: string;
+    estimate?: string;
 }

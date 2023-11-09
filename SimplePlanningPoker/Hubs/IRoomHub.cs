@@ -10,4 +10,10 @@ public interface IRoomHub
     /// <param name="roomId"></param>
     /// <returns></returns>
     Task SendRoomState(RoomState roomState);
+
+    /// <summary>
+    /// Notify all clients in the group that the cards have been reset.
+    /// </summary>
+    /// <returns></returns>
+    Task Reset();
 }

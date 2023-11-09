@@ -45,9 +45,11 @@ namespace SimplePlanningPoker.Managers
             return await Task.FromResult(rooms.TryGetValue(roomId, out Room? room) ? room : null);
         }
 
-        public Task<Room?> GetRoomByParticipant(User participant)
+        public Room? GetRoomByParticipant(User participant)
         {
-            throw new NotImplementedException();
+            return rooms
+                    .FirstOrDefault(r => r.Value.ContainsParticipant(participant.ConnectionId))
+                    .Value;
         }
 
         /// <summary>
@@ -60,7 +62,7 @@ namespace SimplePlanningPoker.Managers
         {
             return Task.Run(() => rooms.TryGetValue(roomId, out Room? room) && room.AddParticipant(participant));
         }
-        
+
         /// <summary>
         /// Removes a participant from a room. Returns <see cref="true"/>, if successful.
         /// </summary>

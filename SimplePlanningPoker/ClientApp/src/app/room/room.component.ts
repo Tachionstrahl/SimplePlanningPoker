@@ -1,6 +1,9 @@
-import { Component } from '@angular/core';
-import { IParticipant } from '../models/participant';
+import { Component, effect } from '@angular/core';
 import { ToastService } from '../services/toast.service';
+import {
+  ActivatedRoute,
+} from '@angular/router';
+import { RoomhubService } from '../services/roomhub.service';
 
 @Component({
   selector: 'app-room',
@@ -8,31 +11,28 @@ import { ToastService } from '../services/toast.service';
   styleUrls: ['./room.component.scss'],
 })
 export class RoomComponent {
-  selectedCard?: string;
-  canReveal: boolean = true;
-  public cards: string[] = [
-    '0',
-    '0.5',
-    '1',
-    '2',
-    '3',
-    '5',
-    '8',
-    '13',
-    '20',
-    '40',
-    '100',
-    '?',
-    '☕',
-  ]; //TODO: Move to service
-  public participants: IParticipant[] = [
-    { name: 'John', estimated: false },
-    { name: 'Jane', estimated: true, estimation: '8' },
-    { name: 'Jack', estimated: true },
-  ]; //TODO: Move to service
-  constructor(private toastService: ToastService) {}
+  private roomId?: string;
 
-  ngOnInit() {}
+  selectedCard?: string|null;
+  
+  constructor(
+    private toastService: ToastService,
+    private route: ActivatedRoute,
+    public hub: RoomhubService
+  ) {
+  }
+
+  ngOnInit() {
+    this.route.params.subscribe((params) => {
+      this.roomId = params['roomid'];
+      if (!this.roomId) throw new Error('No roomId provided');
+      const username = localStorage.getItem('username');
+      if (!username) throw new Error('No username stored');
+      this.hub.connect().then(() => this.hub.join(this.roomId!, username));
+    });
+    this.hub.wasReset.subscribe(() => this.selectedCard = null);
+    
+  }
 
   copyLink() {
     let clipboard = navigator.clipboard;
@@ -40,16 +40,17 @@ export class RoomComponent {
     this.toastService.add('Link copied!');
   }
 
-  reveal() {
-    throw new Error('Method not implemented.');
+  async reveal() {
+    await this.hub.reveal();
   }
-  reset() {
-    throw new Error('Method not implemented.');
+  async reset() {
+    await this.hub.reset();
   }
 
-  select(cardValue: string) {
-    console.log(cardValue);
+  async select(cardValue: string) {
+    await this.hub.estimate(cardValue);
     this.selectedCard = cardValue;
-    
   }
 }
+
+

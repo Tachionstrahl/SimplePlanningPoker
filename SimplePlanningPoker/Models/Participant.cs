@@ -4,6 +4,7 @@ namespace SimplePlanningPoker.Models
     {
         public required User User { get; set; }
         public string? Estimate { get; set; }
+        public bool Estimated { get; set; } = false;
 
     }
 

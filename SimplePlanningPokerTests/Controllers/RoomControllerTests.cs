@@ -34,7 +34,7 @@ public class RoomControllerTests
         var controller = new RoomController(_logger, roomManagerMock.Object, hubContextMock.Object);
 
         // Act
-        var actionResult = await controller.Create();
+        var actionResult = await controller.GetNewRoom();
 
         // Assert
         var result = actionResult.Result as OkObjectResult;
@@ -129,7 +129,7 @@ public class RoomControllerTests
         var controller = new RoomController(_logger, roomManagerMock.Object, hubContextMock.Object);
 
         // Act
-        var result = await controller.Create();
+        var result = await controller.GetNewRoom();
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
@@ -148,7 +148,7 @@ public class RoomControllerTests
         var controller = new RoomController(_logger, roomManagerMock.Object, hubContextMock.Object);
 
         // Act
-        var result = await controller.Create();
+        var result = await controller.GetNewRoom();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);

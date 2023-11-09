@@ -1,0 +1,23 @@
+<form #nameForm="ngForm">
+  <div class="mb-3">
+    <label for="nameInput" class="form-label">Name*</label>
+    <input
+      type="text"
+      id="name"
+      name="name"
+      class="form-control"
+      id="nameInput"
+      required
+      minlength="3"
+      [(ngModel)]="username"
+    />
+  </div>
+  <button
+    type="submit"
+    [disabled]="!nameForm.form.valid"
+    (click)="submit()"
+    class="btn btn-primary"
+  >
+    Save Name
+  </button>
+</form>

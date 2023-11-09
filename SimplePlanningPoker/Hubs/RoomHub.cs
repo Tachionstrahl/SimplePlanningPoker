@@ -42,7 +42,7 @@ namespace SimplePlanningPoker.Hubs
             if (string.IsNullOrEmpty(username))
                 throw new ArgumentNullException(nameof(username));
 
-            var user = CreateAndAddUser();
+            var user = CreateAndAddUser(username);
             var room = await roomManager.GetRoomAsync(roomId) ?? throw new ArgumentException($"Room with ID {roomId} does not exist.");
             room.AddParticipant(user);
             await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
@@ -66,6 +66,7 @@ namespace SimplePlanningPoker.Hubs
             await Clients.Group(roomId).SendRoomState(room.State);
         }
 
+
         /// <summary>
         /// Allows a participant to submit an estimate for the current story. 
         /// Gets the current user and room instance. 
@@ -79,7 +80,7 @@ namespace SimplePlanningPoker.Hubs
                 throw new ArgumentException("estimate is required");
             }
             var user = GetUser();
-            var room = await GetRoom();
+            var room = GetRoom();
 
             room?.Estimate(user.ConnectionId, estimate);
             await SendRoomState(room!.RoomId);
@@ -92,7 +93,7 @@ namespace SimplePlanningPoker.Hubs
         public async Task Reveal()
         {
             var user = GetUser();
-            var room = await GetRoom();
+            var room = GetRoom();
             if (room != null)
             {
                 room.Reveal();
@@ -106,11 +107,12 @@ namespace SimplePlanningPoker.Hubs
         public async Task Reset()
         {
             var user = GetUser();
-            var room = await GetRoom();
+            var room = GetRoom();
             if (room != null)
             {
                 room.Reset();
                 await SendRoomState(room.RoomId);
+                await Clients.Group(room.RoomId).Reset();
             }
         }
 
@@ -122,9 +124,8 @@ namespace SimplePlanningPoker.Hubs
             return user!;
         }
 
-        private User CreateAndAddUser()
+        private User CreateAndAddUser(string username)
         {
-            var username = GetQueryValue("username") ?? throw new ArgumentException("Username must be a query parameter");
             var connectionId = Context.ConnectionId;
             var user = new User(connectionId, username, null);
             userManager.TryAddUser(user);
@@ -134,7 +135,7 @@ namespace SimplePlanningPoker.Hubs
         private async Task RemoveFromAllRooms()
         {
             var user = GetUser();
-            var room = await GetRoom();
+            var room = GetRoom();
             if (room != null)
             {
                 room.RemoveParticipant(user);
@@ -143,17 +144,11 @@ namespace SimplePlanningPoker.Hubs
 
         }
 
-        private async Task<Room?> GetRoom()
+        private Room? GetRoom()
         {
             var user = GetUser();
-            return await roomManager.GetRoomByParticipant(user);
+            return roomManager.GetRoomByParticipant(user);
 
-        }
-
-        private string? GetQueryValue(string queryKey)
-        {
-            var httpContext = Context.GetHttpContext() ?? throw new HubException("Could not get HttpContext");
-            return httpContext.Request.Query[queryKey].Single();
         }
     }
 }

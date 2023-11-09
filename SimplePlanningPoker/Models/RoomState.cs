@@ -27,7 +27,7 @@ namespace SimplePlanningPoker.Models
         /// <summary>
         /// Gets the list of participants in the room.
         /// </summary>
-        public IEnumerable<string> Participants => room.GetAllParticipants().Select(p => p.User.Name);
+        public abstract IEnumerable<ParticipantDto> Participants { get; }
     }
 
     public enum RoomStateName
@@ -46,6 +46,9 @@ namespace SimplePlanningPoker.Models
         }
 
         public override RoomStateName RoomStateName => RoomStateName.Choose;
+
+        public override IEnumerable<ParticipantDto> Participants => room.GetAllParticipants()
+        .Select(p => new ParticipantDto(p.User.Name, p.Estimated, null));
     }
 
     /// <summary>
@@ -58,13 +61,10 @@ namespace SimplePlanningPoker.Models
         }
 
         /// <summary>
-        /// Gets the estimates made by the participants in the room.
+        /// Gets the list of participants in the room with estimates.
         /// </summary>
-        public IDictionary<string, string?> Estimates =>
-        room.GetAllParticipants()
-            .Select(p => new { p.User.Name, p.Estimate })
-            .ToDictionary(e => e.Name, e => e.Estimate);
-
+        public override IEnumerable<ParticipantDto> Participants => room.GetAllParticipants()
+        .Select(p => new ParticipantDto(p.User.Name, p.Estimated, p.Estimate));
         public override RoomStateName RoomStateName => RoomStateName.Show;
     }
 

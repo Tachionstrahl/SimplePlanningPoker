@@ -1,8 +1,8 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { NgModule, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
-import { RouterModule } from '@angular/router';
+import { ActivatedRouteSnapshot, CanActivateFn, Router, RouterModule, RouterStateSnapshot } from '@angular/router';
 
 import { AppComponent } from './app.component';
 import { NavMenuComponent } from './nav-menu/nav-menu.component';
@@ -14,6 +14,20 @@ import { ParticipantComponent } from './participant/participant.component';
 import { CardComponent } from './card/card.component';
 import { ToastService } from './services/toast.service';
 import { ToastComponent } from './toast/toast.component';
+import { UsernameComponent } from './username/username.component';
+
+const canActivateRoom: CanActivateFn = (
+  route: ActivatedRouteSnapshot,
+  state: RouterStateSnapshot
+) => {
+  if (!localStorage.getItem('username'))
+    return inject(Router).createUrlTree(['/username'], {
+      queryParams: {
+        redirectTo: state.url,
+      },
+    });
+  return true;
+};
 
 @NgModule({
   declarations: [
@@ -25,7 +39,8 @@ import { ToastComponent } from './toast/toast.component';
     RoomComponent,
     ParticipantComponent,
     CardComponent,
-    ToastComponent
+    ToastComponent,
+    UsernameComponent
   ],
   imports: [
     BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),
@@ -33,13 +48,14 @@ import { ToastComponent } from './toast/toast.component';
     FormsModule,
     RouterModule.forRoot([
       { path: '', component: HomeComponent, pathMatch: 'full' },
-      { path: 'counter', component: CounterComponent },
-      { path: 'fetch-data', component: FetchDataComponent },
-      { path: 'room', component: RoomComponent },
+      { path: 'room/:roomid', component: RoomComponent, canActivate: [canActivateRoom]},
+      { path: 'username', component: UsernameComponent}
     ])
   ],
   providers: [ToastService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
+
+
 

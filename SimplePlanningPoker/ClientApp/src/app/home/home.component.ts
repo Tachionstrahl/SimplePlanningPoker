@@ -1,22 +1,17 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { RoomApiService } from '../services/room-api.service';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
 })
 export class HomeComponent {
+  constructor(private router: Router, private api: RoomApiService) {}
 
-  constructor(private router: Router) {
-
-   }
-
-createRoom() {
-  this.router.navigate(['/room']);
+  createRoom() {
+    var roomId = this.api
+      .createRoom()
+      .subscribe((roomId) => this.router.navigate(['/room', roomId]));
+  }
 }
-
-joinRoom() {
-  this.router.navigate(['/room']);
-}
-}
-

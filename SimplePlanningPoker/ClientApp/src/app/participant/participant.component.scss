@@ -1,4 +1,10 @@
+@import '../../scss/custom.scss';
 .small-card {
     max-width: 2rem;
     max-height: 3rem;
+}
+
+.revealed {
+    background-color: $primary;
+    color: $secondary;
 }
