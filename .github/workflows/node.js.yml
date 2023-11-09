@@ -28,5 +28,8 @@ jobs:
         cache: 'npm'
         cache-dependency-path: ./SimplePlanningPoker/ClientApp/package-lock.json
     - run: npm ci
+      working-directory: ./SimplePlanningPoker/ClientApp
     - run: npm run build --if-present
+      working-directory: ./SimplePlanningPoker/ClientApp
     - run: npm test
+      working-directory: ./SimplePlanningPoker/ClientApp
