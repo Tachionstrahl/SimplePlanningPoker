@@ -23,7 +23,7 @@ public class RoomControllerTests
     /// Tests that Create returns a RoomId.
     /// </summary>
     [Fact]
-    public async Task Create_ReturnsRoomId()
+    public void Create_ReturnsRoomId()
     {
         // Arrange
         var roomId = "12345";
@@ -45,7 +45,7 @@ public class RoomControllerTests
 
 
     [Fact]
-    public async Task Create_ReturnsBadRequest_WhenRoomCreationFails()
+    public void Create_ReturnsBadRequest_WhenRoomCreationFails()
     {
         // Arrange
         var roomManagerMock = new Mock<IRoomManager>();
@@ -62,7 +62,7 @@ public class RoomControllerTests
     }
 
     [Fact]
-    public async Task Create_ReturnsOk_WhenRoomCreationSucceeds()
+    public void Create_ReturnsContent_WhenRoomCreationSucceeds()
     {
         // Arrange
         var roomId = "abc123";
@@ -75,8 +75,8 @@ public class RoomControllerTests
         var result = controller.GetNewRoom();
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.Equal(roomId, okResult.Value);
+        var contentResult = Assert.IsType<ContentResult>(result.Result);
+        Assert.Equal($"\"{roomId}\"", contentResult.Content);
     }
 
 }
