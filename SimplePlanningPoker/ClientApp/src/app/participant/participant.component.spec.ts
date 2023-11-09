@@ -12,6 +12,11 @@ describe('ParticipantComponent', () => {
     });
     fixture = TestBed.createComponent(ParticipantComponent);
     component = fixture.componentInstance;
+    component.value = {
+      name: 'test',
+      estimated: true,
+      estimate: "0"
+    }
     fixture.detectChanges();
   });
 
