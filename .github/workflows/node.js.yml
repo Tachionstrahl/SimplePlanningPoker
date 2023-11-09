@@ -27,5 +27,8 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     - run: npm ci
+      working-directory: ./SimplePlanningPoker/ClientApp
     - run: npm run build --if-present
+      working-directory: ./SimplePlanningPoker/ClientApp
     - run: npm test
+      working-directory: ./SimplePlanningPoker/ClientApp
