@@ -1,5 +1,3 @@
-@import '../../scss/variables';
-
 a.navbar-brand {
   white-space: normal;
   text-align: center;
@@ -20,7 +18,7 @@ html {
 }
 
 .logo-simple {
-  color: $accent;
+  color: var(--bs-info);
   font-size: 0.75rem;
   font-style: normal;
   font-weight: 700;

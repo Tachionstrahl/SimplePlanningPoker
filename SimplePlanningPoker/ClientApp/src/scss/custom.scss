@@ -11,14 +11,12 @@ $enable-rounded: false;
 $primary: #000;
 $secondary: #fff;
 $success: #28a745;
-$info: #17a2b8;
+$info: #9747FF;
 $warning: #ffc107;
 $danger: #dc3545;
 $light: #f8f9fa;
 $dark: #343a40;
 $lines: #DCDCDC;
-
-$accent: #9747FF;
 
 
 // Typography
@@ -36,12 +34,9 @@ $btn-border-radius-sm: 0;
 $btn-border-width: 1px;
 
 // Toasts
-$toast-background-color: $accent;
+$toast-background-color: $info;
 $toast-color: $secondary;
 $toast-border-width: 0;
-
-
-
 
 // Required
 @import "../../node_modules/bootstrap/scss/variables";
@@ -58,4 +53,6 @@ $toast-border-width: 0;
 // etc
 
 // Then add additional custom code here
+
+// Merge the maps
 

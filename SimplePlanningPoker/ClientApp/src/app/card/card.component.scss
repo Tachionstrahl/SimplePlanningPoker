@@ -1,7 +1,5 @@
-@import "../../scss/custom.scss";
-
 .pp-card {
-    background-color: $secondary;
+    background-color: var(--bs-secondary);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -12,12 +10,12 @@
 }
 
 .pp-card:hover {
-    color: $secondary;
-    background-color: $primary;
+    color: var(--bs-secondary);
+    background-color: var(--bs-primary);
     cursor: pointer;
 }
 
 .pp-card.selected {
-    color: $secondary;
-    background-color: $primary;
+    color: var(--bs-secondary);
+    background-color: var(--bs-primary);
 }
