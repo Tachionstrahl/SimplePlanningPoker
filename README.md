@@ -17,10 +17,11 @@ Simple Planning Poker is a web application that allows agile teams to estimate u
 - Mobile-first design
 
 ## Screenshots
-Desktop:
-![Logo](/docs/media/Desktop.png)
-Mobile:
-![Logo](/docs/media/Mobile.png)
+### Desktop
+<img src="/docs/media/Desktop.png" alt="Desktop Screen" width="600">
+
+### Mobile
+<img src="/docs/media/Mobile.png" alt="Mobile Screen" width="300">
 
 
 
