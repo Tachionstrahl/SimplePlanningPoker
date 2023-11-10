@@ -2,6 +2,8 @@
 [![Backend](https://github.com/Tachionstrahl/SimplePlanningPoker/actions/workflows/dotnet.yml/badge.svg?branch=main)](https://github.com/Tachionstrahl/SimplePlanningPoker/actions/workflows/dotnet.yml)
 [![Frontend](https://github.com/Tachionstrahl/SimplePlanningPoker/actions/workflows/node.js.yml/badge.svg)](https://github.com/Tachionstrahl/SimplePlanningPoker/actions/workflows/node.js.yml)
 
+![Logo](/docs/media/Logo.png)
+
 Simple Planning Poker is a web application that allows agile teams to estimate user stories using planning poker techniques.
 
 ## Features
@@ -12,6 +14,15 @@ Simple Planning Poker is a web application that allows agile teams to estimate u
 - Reveal estimates simultaneously
 - Reset estimation rounds
 - Real-time updates
+- Mobile-first design
+
+## Screenshots
+Desktop:
+![Logo](/docs/media/Desktop.png)
+Mobile:
+![Logo](/docs/media/Mobile.png)
+
+
 
 ## Technologies
 
